@@ -566,6 +566,7 @@
       <div></div>
       <div style="display:flex; gap:8px;">
         <button class="btn-backup" onclick="closeSyncModal()">Close</button>
+        <button class="btn-backup" id="syncNowBtn" style="display:none;" onclick="forceSyncNow()">Sync now</button>
         <button class="btn-save" id="connectDriveBtn" onclick="requestSignIn()">Connect Google Drive</button>
         <button class="btn-backup" id="disconnectDriveBtn" style="display:none;" onclick="disconnectDrive()">Disconnect</button>
       </div>
@@ -1116,9 +1117,17 @@
     });
   }
 
+  function forceSyncNow() {
+    touch();
+    setStatus('Syncing…');
+    writeToDrive();
+    setTimeout(() => { runDriveDebug(); }, 1200);
+  }
+
   function openSyncModal() {
     document.getElementById('connectDriveBtn').style.display = driveState.signedIn ? 'none' : 'inline-block';
     document.getElementById('disconnectDriveBtn').style.display = driveState.signedIn ? 'inline-block' : 'none';
+    document.getElementById('syncNowBtn').style.display = driveState.signedIn ? 'inline-block' : 'none';
     let bodyText = driveState.signedIn
       ? 'Connected. Your data syncs automatically to a hidden folder in your Google Drive.'
       : 'Connect Google Drive so this list stays the same on your phone and your laptop. Your data is stored in a hidden app folder in your Drive.';
