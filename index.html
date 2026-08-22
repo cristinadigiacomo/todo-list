@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>To-Do List</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#121212">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="To-Do List">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" href="./icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #121212;
+    --surface: #1a1a1a;
+    --surface-raised: #202020;
+    --border: #2e2e2e;
+    --border-light: #3a3a3a;
+    --text: #f2f2ef;
+    --text-dim: #ffffff;
+    --text-faint: #ffffff;
+    --mint: #5fe3a8;
+    --mint-dim: #2d5c48;
+    --amber: #d4a24c;
+    --red-dim: #8a5b52;
+    --font-display: 'IBM Plex Mono', 'Courier New', monospace;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 17px;
+    padding: 40px 32px 100px;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1320px; margin: 0 auto; }
+
+  /* ---------- HEADER ---------- */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 20px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+    margin-bottom: 28px;
+  }
+
+  h1 {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 900;
+    font-size: 32px;
+    letter-spacing: 0.2px;
+    color: #ffffff;
+    text-transform: none;
+  }
+
+  h1 span { display: block; color: var(--text-faint); font-weight: 400; font-size: 14px; text-transform: none; letter-spacing: normal; font-family: var(--font-body); margin-top: 4px; }
+
+  .header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+  }
+
+  .stats {
+    display: flex;
+    gap: 36px;
+    font-family: var(--font-display);
+  }
+
+  .stat { text-align: right; }
+  .stat-num { font-size: 36px; font-weight: 600; line-height: 1; }
+  .stat-label {
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-top: 6px;
+  }
+  .stat-num.mint { color: var(--mint); }
+
+  .sync-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-display);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-faint);
+    cursor: pointer;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 5px 10px;
+    background: var(--surface);
+    transition: border-color 0.15s ease;
+  }
+  .sync-status:hover { border-color: var(--border-light); }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .sync-status.synced .sync-dot { background: var(--mint); }
+  .sync-status.offline .sync-dot { background: var(--amber); }
+  .sync-status.signedout .sync-dot { background: var(--text-faint); }
+  .sync-status.syncing .sync-dot { background: var(--mint); animation: sync-pulse 1s ease-in-out infinite; }
+  .sync-status.error .sync-dot { background: #d4685f; }
+  @keyframes sync-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  /* ---------- PROGRESS BAR ---------- */
+  .progress-wrap {
+    padding: 24px 0 32px;
+  }
+  .progress-key {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .progress-key-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+  .progress-key-count { font-weight: 700; margin-right: 2px; }
+  .progress-key-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .progress-bar-track {
+    display: flex;
+    width: 100%;
+    height: 34px;
+    border-radius: 17px;
+    overflow: hidden;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .progress-seg {
+    height: 100%;
+    transition: width 0.5s ease;
+  }
+  .progress-seg.done { background: var(--mint); }
+  .progress-seg.pending { background: var(--amber); }
+  .progress-seg.todo { background: var(--border-light); }
+  .progress-pct {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--mint);
+    text-align: right;
+    margin-top: 8px;
+  }
+  .progress-empty {
+    color: var(--text-faint);
+    opacity: 0.6;
+    font-size: 15px;
+    font-style: italic;
+    padding: 10px 0 0;
+    text-align: center;
+  }
+
+  /* ---------- QUICK ADD ---------- */
+  .quick-add {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+
+  .quick-add input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 16px 16px;
+    font-family: var(--font-body);
+    font-size: 17px;
+    border-radius: 4px;
+  }
+  .quick-add input::placeholder { color: var(--text-faint); }
+  .quick-add input:focus { outline: none; border-color: var(--mint-dim); }
+
+  .quick-add input[name="task"] { flex: 2 1 280px; }
+  .quick-add input[name="notes"] { flex: 2 1 240px; }
+  .quick-add input[name="date"] { flex: 0 1 170px; color-scheme: dark; }
+
+  .btn-add {
+    background: var(--mint);
+    color: #0a1a13;
+    border: none;
+    padding: 14px 24px;
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn-add:hover { opacity: 0.85; }
+
+  /* ---------- BOARD ---------- */
+  .board {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 900px) {
+    .board { grid-template-columns: 1fr; }
+  }
+
+  .column {
+    background: rgba(255,255,255,0.015);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    min-height: 200px;
+  }
+
+  .column-head {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .column-title {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .column-count {
+    font-family: var(--font-display);
+    font-size: 14px;
+    color: var(--text-faint);
+    background: var(--surface);
+    padding: 3px 10px;
+    border-radius: 12px;
+  }
+
+  .column-body {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .empty-hint {
+    color: var(--text-faint);
+    font-size: 16px;
+    padding: 26px 14px;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  /* ---------- CARD ---------- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px 16px 14px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .card:hover { border-color: var(--border-light); }
+
+  .card-name {
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .card.done .card-name {
+    text-decoration: line-through;
+    opacity: 0.55;
+  }
+  .card.done .card-context { opacity: 0.55; }
+
+  .card-context {
+    font-size: 15px;
+    color: var(--text-dim);
+    line-height: 1.45;
+    margin-bottom: 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .card-date {
+    font-family: var(--font-display);
+    font-size: 13px;
+    color: var(--text-faint);
+  }
+
+  .tag {
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 4px 9px;
+    border-radius: 3px;
+  }
+  .tag.done { background: rgba(95,227,168,0.15); color: var(--mint); }
+  .tag.pending { background: rgba(212,162,76,0.15); color: var(--amber); }
+  .tag.todo { background: rgba(255,255,255,0.06); color: var(--text-faint); }
+
+  /* ---------- MODAL ---------- */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 10;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .overlay.active { display: flex; }
+
+  .modal {
+    background: var(--surface-raised);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    width: 100%;
+    max-width: 560px;
+    padding: 32px;
+  }
+
+  .modal-title {
+    font-size: 26px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .modal-sub {
+    font-family: var(--font-display);
+    font-size: 14px;
+    color: var(--text-faint);
+    margin-bottom: 26px;
+  }
+
+  .field { margin-bottom: 22px; }
+  .field label {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 8px;
+  }
+  .field input, .field textarea, .field select {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 13px 14px;
+    font-family: var(--font-body);
+    font-size: 17px;
+    border-radius: 4px;
+    color-scheme: dark;
+  }
+  .field textarea { resize: vertical; min-height: 100px; }
+  .field input:focus, .field textarea:focus, .field select:focus {
+    outline: none; border-color: var(--mint-dim);
+  }
+
+  .outcome-row { display: flex; gap: 8px; }
+  .outcome-btn {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 13px 6px;
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .outcome-btn.active.done { border-color: var(--mint); color: var(--mint); background: rgba(95,227,168,0.1); }
+  .outcome-btn.active.pending { border-color: var(--amber); color: var(--amber); background: rgba(212,162,76,0.1); }
+  .outcome-btn.active.todo { border-color: var(--text-faint); color: var(--text-dim); background: rgba(255,255,255,0.03); }
+
+  .modal-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .btn-delete {
+    background: none;
+    border: none;
+    color: var(--text-faint);
+    font-size: 15px;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  .btn-delete:hover { color: var(--red-dim); }
+
+  .btn-save {
+    background: var(--mint);
+    color: #0a1a13;
+    border: none;
+    padding: 13px 28px;
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .btn-close {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    background: none;
+    border: none;
+    color: var(--text-faint);
+    font-size: 26px;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .modal { position: relative; }
+
+  .status-msg {
+    font-family: var(--font-display);
+    font-size: 13px;
+    color: var(--text-faint);
+    text-align: center;
+    margin-top: 30px;
+  }
+
+  .backup-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .btn-backup {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 8px 16px;
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .btn-backup:hover { border-color: var(--border-light); color: var(--text); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>To-Do List <span>/ todo &rarr; pending &rarr; done</span></h1>
+    <div class="header-right">
+      <div class="stats">
+        <div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total</div></div>
+        <div class="stat"><div class="stat-num" id="stat-pending">0</div><div class="stat-label">In process</div></div>
+        <div class="stat"><div class="stat-num mint" id="stat-rate">&mdash;</div><div class="stat-label">Done rate</div></div>
+      </div>
+      <div class="sync-status signedout" id="syncStatus">
+        <span class="sync-dot"></span>
+        <span id="syncStatusLabel">Sign in to sync</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-key" id="progressKey"></div>
+    <div class="progress-bar-track" id="progressTrack">
+      <div class="progress-seg done" id="segDone"></div>
+      <div class="progress-seg pending" id="segPending"></div>
+      <div class="progress-seg todo" id="segTodo"></div>
+    </div>
+    <div class="progress-pct" id="progressPct"></div>
+  </div>
+
+  <div class="quick-add">
+    <input type="text" name="task" placeholder="What needs doing?" id="qa-task">
+    <input type="text" name="notes" placeholder="Notes (optional)" id="qa-notes">
+    <input type="date" name="date" id="qa-date">
+    <button class="btn-add" onclick="quickAdd()">+ Add</button>
+  </div>
+
+  <div class="board">
+    <div class="column">
+      <div class="column-head">
+        <div class="column-title">To Do</div>
+        <div class="column-count" id="count-todo">0</div>
+      </div>
+      <div class="column-body" id="col-todo"></div>
+    </div>
+    <div class="column">
+      <div class="column-head">
+        <div class="column-title">Pending</div>
+        <div class="column-count" id="count-pending">0</div>
+      </div>
+      <div class="column-body" id="col-pending"></div>
+    </div>
+    <div class="column">
+      <div class="column-head">
+        <div class="column-title">Done</div>
+        <div class="column-count" id="count-done">0</div>
+      </div>
+      <div class="column-body" id="col-done"></div>
+    </div>
+  </div>
+
+  <div class="status-msg" id="status-msg">&nbsp;</div>
+  <div class="backup-row">
+    <button class="btn-backup" onclick="exportBackup()">Export backup</button>
+    <button class="btn-backup" onclick="triggerImport()">Import backup</button>
+    <input type="file" id="import-file-input" accept="application/json" style="display:none;" onchange="importBackup(this)">
+  </div>
+</div>
+
+<div class="overlay" id="syncModalOverlay">
+  <div class="modal">
+    <div class="modal-title">Google Drive sync</div>
+    <div class="modal-sub" id="syncModalBody">Connect Google Drive so this list stays the same on your phone and your laptop. Your data is stored in a hidden app folder in your Drive.</div>
+    <div class="modal-actions">
+      <div></div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-backup" onclick="closeSyncModal()">Close</button>
+        <button class="btn-save" id="connectDriveBtn" onclick="requestSignIn()">Connect Google Drive</button>
+        <button class="btn-backup" id="disconnectDriveBtn" style="display:none;" onclick="disconnectDrive()">Disconnect</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <button class="btn-close" onclick="closeModal()">&times;</button>
+    <div class="modal-sub" id="modal-sub">&nbsp;</div>
+
+    <div class="field">
+      <label>Task</label>
+      <input type="text" id="edit-task">
+    </div>
+
+    <div class="field">
+      <label>Notes</label>
+      <textarea id="edit-notes" placeholder="Details, next step, whatever's useful"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Status</label>
+      <div class="outcome-row" id="status-buttons"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-delete" onclick="deleteTask()">Delete</button>
+      <button class="btn-save" onclick="saveModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+  const STORAGE_KEY = 'todo-list-tasks';
+  let tasks = [];
+  let activeId = null;
+  const statuses = ['todo', 'pending', 'done'];
+  const statusLabels = { todo: 'To Do', pending: 'Pending', done: 'Done' };
+
+  function todayStr() {
+    return new Date().toISOString().slice(0,10);
+  }
+
+  function uid() {
+    return 't_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+  }
+
+  const usingClaudeStorage = (typeof window.storage !== 'undefined' && window.storage !== null);
+
+  async function storageRead(key) {
+    if (usingClaudeStorage) {
+      const result = await window.storage.get(key, false);
+      return result && result.value ? result.value : null;
+    }
+    return localStorage.getItem(key);
+  }
+
+  async function storageWrite(key, value) {
+    if (usingClaudeStorage) {
+      await window.storage.set(key, value, false);
+    } else {
+      localStorage.setItem(key, value);
+    }
+  }
+
+  const UPDATED_AT_KEY = 'todo-list-updated-at';
+  let lastUpdatedAt = parseInt(localStorage.getItem(UPDATED_AT_KEY) || '0', 10) || 0;
+
+  function touch() {
+    lastUpdatedAt = Date.now();
+    localStorage.setItem(UPDATED_AT_KEY, String(lastUpdatedAt));
+  }
+
+  async function loadTasks() {
+    try {
+      const raw = await storageRead(STORAGE_KEY);
+      tasks = raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      tasks = [];
+    }
+    render();
+  }
+
+  async function persist() {
+    touch();
+    setStatus('Saving...');
+    try {
+      await storageWrite(STORAGE_KEY, JSON.stringify(tasks));
+      setStatus('Saved' + (usingClaudeStorage ? '' : ' locally in this browser'));
+      setTimeout(() => setStatus(''), 1800);
+    } catch (e) {
+      setStatus('Save failed — use Export to back up your data');
+    }
+    scheduleDriveWrite();
+  }
+
+  function setStatus(msg) {
+    document.getElementById('status-msg').textContent = msg || ' ';
+  }
+
+  function exportBackup() {
+    const blob = new Blob([JSON.stringify(tasks, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = STORAGE_KEY + '-backup-' + todayStr() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function triggerImport() {
+    document.getElementById('import-file-input').click();
+  }
+
+  function importBackup(fileInput) {
+    const file = fileInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const imported = JSON.parse(e.target.result);
+        if (!Array.isArray(imported)) throw new Error('not an array');
+        const ok = confirm('This will replace everything currently in the board with ' + imported.length + ' entries from this file. Continue?');
+        if (!ok) return;
+        tasks = imported;
+        persist();
+        render();
+      } catch (err) {
+        alert('Could not read that file — it doesn’t look like a valid backup.');
+      }
+    };
+    reader.readAsText(file);
+    fileInput.value = '';
+  }
+
+  function quickAdd() {
+    const taskEl = document.getElementById('qa-task');
+    const notesEl = document.getElementById('qa-notes');
+    const dateEl = document.getElementById('qa-date');
+    const task = taskEl.value.trim();
+    if (!task) { taskEl.focus(); return; }
+
+    tasks.unshift({
+      id: uid(),
+      task,
+      notes: notesEl.value.trim(),
+      date: dateEl.value || todayStr(),
+      status: 'todo'
+    });
+
+    taskEl.value = '';
+    notesEl.value = '';
+    dateEl.value = '';
+    persist();
+    render();
+  }
+
+  function render() {
+    const buckets = {
+      todo: tasks.filter(t => t.status === 'todo'),
+      pending: tasks.filter(t => t.status === 'pending'),
+      done: tasks.filter(t => t.status === 'done')
+    };
+
+    Object.keys(buckets).forEach(key => {
+      const col = document.getElementById('col-' + key);
+      const items = buckets[key].sort((a,b) => (b.date || '').localeCompare(a.date || ''));
+      document.getElementById('count-' + key).textContent = items.length;
+
+      if (items.length === 0) {
+        col.innerHTML = `<div class="empty-hint">${
+          key === 'todo' ? 'Nothing here yet. Add something above.' :
+          key === 'pending' ? 'Mark something in process to see it here.' :
+          'Checked-off items land here.'
+        }</div>`;
+        return;
+      }
+
+      col.innerHTML = items.map(t => `
+        <div class="card ${t.status === 'done' ? 'done' : ''}" onclick="openModal('${t.id}')">
+          <div class="card-name">${escapeHtml(t.task)}</div>
+          ${t.notes ? `<div class="card-context">${escapeHtml(t.notes)}</div>` : ''}
+          <div class="card-meta">
+            <div class="card-date">${t.date || ''}</div>
+            <div class="tag ${t.status}">${statusLabels[t.status]}</div>
+          </div>
+        </div>
+      `).join('');
+    });
+
+    // header stats
+    const total = tasks.length;
+    const pending = tasks.filter(t => t.status === 'pending').length;
+    const done = tasks.filter(t => t.status === 'done').length;
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-pending').textContent = pending;
+    document.getElementById('stat-rate').textContent = total > 0 ? Math.round((done/total)*100) + '%' : '—';
+
+    renderProgress(total, pending, done);
+  }
+
+  function renderProgress(total, pending, done) {
+    const wrap = document.getElementById('progressWrap');
+    const track = document.getElementById('progressTrack');
+    const key = document.getElementById('progressKey');
+    const pct = document.getElementById('progressPct');
+    const existingEmpty = wrap.querySelector('.progress-empty');
+    if (existingEmpty) existingEmpty.remove();
+
+    const todo = total - pending - done;
+
+    if (total === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'progress-empty';
+      empty.textContent = 'Your progress bar fills in as you add tasks.';
+      wrap.appendChild(empty);
+      track.style.display = 'none';
+      key.innerHTML = '';
+      pct.textContent = '';
+      return;
+    }
+    track.style.display = 'flex';
+
+    document.getElementById('segDone').style.width = (done / total * 100) + '%';
+    document.getElementById('segPending').style.width = (pending / total * 100) + '%';
+    document.getElementById('segTodo').style.width = (todo / total * 100) + '%';
+
+    const categories = [
+      { label: 'Done', count: done, color: 'var(--mint)' },
+      { label: 'Pending', count: pending, color: 'var(--amber)' },
+      { label: 'To Do', count: todo, color: 'var(--border-light)' }
+    ];
+    key.innerHTML = categories.map(c => `
+      <div class="progress-key-item">
+        <span class="progress-key-dot" style="background:${c.color}"></span>
+        <span class="progress-key-count">${c.count}</span>
+        <span>${c.label}</span>
+      </div>
+    `).join('');
+
+    pct.textContent = Math.round((done / total) * 100) + '% done';
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function openModal(id) {
+    activeId = id;
+    const t = tasks.find(x => x.id === id);
+    if (!t) return;
+
+    document.getElementById('modal-sub').textContent = 'Added ' + (t.date || '—');
+    document.getElementById('edit-task').value = t.task || '';
+    document.getElementById('edit-notes').value = t.notes || '';
+
+    document.getElementById('status-buttons').innerHTML = statuses.map(s => `
+      <button type="button" class="outcome-btn ${s} ${t.status === s ? 'active ' + s : ''}" data-status="${s}" onclick="pickStatus('${s}')">${statusLabels[s]}</button>
+    `).join('');
+
+    document.getElementById('overlay').classList.add('active');
+  }
+
+  function pickStatus(status) {
+    const t = tasks.find(x => x.id === activeId);
+    if (!t) return;
+    t.status = status;
+    openModal(activeId);
+  }
+
+  function closeModal() {
+    document.getElementById('overlay').classList.remove('active');
+    activeId = null;
+  }
+
+  function saveModal() {
+    const t = tasks.find(x => x.id === activeId);
+    if (!t) return;
+    const taskText = document.getElementById('edit-task').value.trim();
+    if (!taskText) { document.getElementById('edit-task').focus(); return; }
+    t.task = taskText;
+    t.notes = document.getElementById('edit-notes').value.trim();
+    persist();
+    render();
+    closeModal();
+  }
+
+  function deleteTask() {
+    tasks = tasks.filter(x => x.id !== activeId);
+    persist();
+    render();
+    closeModal();
+  }
+
+  // ============================================================
+  // Google Drive sync
+  // ============================================================
+
+  const GOOGLE_CLIENT_ID = "977352598129-rahsvdmk1na65u4qp4blansf5mvhm6m7.apps.googleusercontent.com";
+  const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.appdata";
+  const DRIVE_FILENAME = "todo-list-data.json";
+  const TOKEN_KEY = "todo-list-drive-token";
+
+  const driveState = {
+    tokenClient: null,
+    accessToken: null,
+    tokenExpiry: 0,
+    fileId: null,
+    online: navigator.onLine,
+    signedIn: false,
+    lastError: null
+  };
+
+  function loadStoredToken() {
+    try {
+      const raw = localStorage.getItem(TOKEN_KEY);
+      if (!raw) return;
+      const t = JSON.parse(raw);
+      if (t && t.accessToken && t.expiry > Date.now()) {
+        driveState.accessToken = t.accessToken;
+        driveState.tokenExpiry = t.expiry;
+        driveState.signedIn = true;
+      }
+    } catch (e) {}
+  }
+
+  function storeToken(accessToken, expiresInSeconds) {
+    driveState.accessToken = accessToken;
+    driveState.tokenExpiry = Date.now() + expiresInSeconds * 1000;
+    driveState.signedIn = true;
+    localStorage.setItem(TOKEN_KEY, JSON.stringify({ accessToken, expiry: driveState.tokenExpiry }));
+  }
+
+  function clearToken() {
+    driveState.accessToken = null;
+    driveState.tokenExpiry = 0;
+    driveState.signedIn = false;
+    localStorage.removeItem(TOKEN_KEY);
+  }
+
+  function refreshSyncUI() {
+    const el = document.getElementById('syncStatus');
+    const label = document.getElementById('syncStatusLabel');
+    let mode = 'signedout', text = 'Sign in to sync';
+    if (!driveState.online) { mode = 'offline'; text = 'Offline — will sync'; }
+    else if (!driveState.signedIn) { mode = 'signedout'; text = 'Sign in to sync'; }
+    else if (driveState.lastError) { mode = 'error'; text = 'Sync error — retrying'; }
+    else { mode = 'synced'; text = 'Synced'; }
+    el.className = 'sync-status ' + mode;
+    label.textContent = text;
+  }
+
+  window.addEventListener('online', () => { driveState.online = true; refreshSyncUI(); trySyncFromDrive(); });
+  window.addEventListener('offline', () => { driveState.online = false; refreshSyncUI(); });
+
+  function initGoogleAuth() {
+    if (typeof google === 'undefined' || !google.accounts) { refreshSyncUI(); return; }
+    driveState.tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: DRIVE_SCOPE,
+      callback: function (resp) {
+        if (resp && resp.access_token) {
+          storeToken(resp.access_token, resp.expires_in || 3500);
+          refreshSyncUI();
+          closeSyncModal();
+          setStatus('Connected to Google Drive');
+          trySyncFromDrive();
+        }
+      }
+    });
+    loadStoredToken();
+    refreshSyncUI();
+    if (driveState.signedIn) trySyncFromDrive();
+  }
+
+  function requestSignIn() {
+    if (!driveState.tokenClient) {
+      alert('Google sign-in is still loading — try again in a moment.');
+      return;
+    }
+    driveState.tokenClient.requestAccessToken({ prompt: driveState.signedIn ? '' : 'consent' });
+  }
+
+  function disconnectDrive() {
+    if (!confirm('Disconnect Google Drive? Your data will stay on this device but will stop syncing.')) return;
+    clearToken();
+    driveState.fileId = null;
+    refreshSyncUI();
+    closeSyncModal();
+    setStatus('Disconnected from Google Drive');
+  }
+
+  function ensureValidToken(cb) {
+    if (driveState.accessToken && Date.now() < driveState.tokenExpiry - 30000) { cb(true); return; }
+    if (!driveState.tokenClient) { cb(false); return; }
+    driveState.tokenClient.callback = function (resp) {
+      if (resp && resp.access_token) {
+        storeToken(resp.access_token, resp.expires_in || 3500);
+        cb(true);
+      } else {
+        cb(false);
+      }
+    };
+    driveState.tokenClient.requestAccessToken({ prompt: '' });
+  }
+
+  function driveFetch(url, opts) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    opts.headers['Authorization'] = 'Bearer ' + driveState.accessToken;
+    return fetch(url, opts);
+  }
+
+  function findDriveFile(cb) {
+    const params = new URLSearchParams({
+      spaces: 'appDataFolder',
+      q: `name='${DRIVE_FILENAME}' and trashed=false`,
+      fields: 'files(id,name,modifiedTime)',
+      orderBy: 'modifiedTime desc'
+    });
+    driveFetch('https://www.googleapis.com/drive/v3/files?' + params.toString())
+      .then(r => r.json().then(data => ({ ok: r.ok, data })))
+      .then(res => {
+        if (!res.ok) {
+          driveState.lastError = (res.data && res.data.error) || new Error('Drive lookup failed');
+          refreshSyncUI();
+          cb(null, driveState.lastError);
+          return;
+        }
+        const files = res.data.files || [];
+        if (!files.length) { cb(null); return; }
+        driveState.fileId = files[0].id;
+        if (files.length > 1) {
+          files.slice(1).forEach(dupe => {
+            driveFetch('https://www.googleapis.com/drive/v3/files/' + dupe.id, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ trashed: true })
+            }).catch(() => {});
+          });
+        }
+        cb(driveState.fileId);
+      })
+      .catch(err => { driveState.lastError = err; refreshSyncUI(); cb(null, err); });
+  }
+
+  function downloadDriveFile(fileId, cb) {
+    driveFetch('https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media')
+      .then(r => r.json())
+      .then(data => cb(data))
+      .catch(err => { driveState.lastError = err; refreshSyncUI(); cb(null, err); });
+  }
+
+  function createDriveFile(payload, cb) {
+    const metadata = { name: DRIVE_FILENAME, parents: ['appDataFolder'] };
+    const boundary = '-------todolistboundary';
+    const body =
+      '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' +
+      JSON.stringify(metadata) + '\r\n' +
+      '--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' +
+      JSON.stringify(payload) + '\r\n' +
+      '--' + boundary + '--';
+
+    driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
+      method: 'POST',
+      headers: { 'Content-Type': 'multipart/related; boundary=' + boundary },
+      body
+    }).then(r => r.json())
+      .then(data => { driveState.fileId = data.id; cb(true); })
+      .catch(err => { driveState.lastError = err; refreshSyncUI(); cb(false, err); });
+  }
+
+  function updateDriveFile(fileId, payload, cb) {
+    driveFetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=media', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(r => {
+      if (!r.ok) throw new Error('Drive write failed: ' + r.status);
+      driveState.lastError = null;
+      cb(true);
+    }).catch(err => { driveState.lastError = err; refreshSyncUI(); cb(false, err); });
+  }
+
+  function currentPayload() {
+    return { tasks, updatedAt: lastUpdatedAt };
+  }
+
+  function writeToDrive() {
+    if (!driveState.online || !driveState.signedIn) return;
+    ensureValidToken(ok => {
+      if (!ok) return;
+      const payload = currentPayload();
+      if (driveState.fileId) {
+        updateDriveFile(driveState.fileId, payload, () => refreshSyncUI());
+      } else {
+        findDriveFile((fileId, err) => {
+          if (fileId) {
+            updateDriveFile(fileId, payload, () => refreshSyncUI());
+          } else if (!err) {
+            createDriveFile(payload, () => refreshSyncUI());
+          } else {
+            refreshSyncUI();
+          }
+        });
+      }
+    });
+  }
+
+  let writeDebounceTimer;
+  function scheduleDriveWrite() {
+    if (!driveState.signedIn) return;
+    clearTimeout(writeDebounceTimer);
+    writeDebounceTimer = setTimeout(writeToDrive, 1500);
+  }
+
+  function trySyncFromDrive() {
+    if (!driveState.online || !driveState.signedIn) return;
+    ensureValidToken(ok => {
+      if (!ok) return;
+      refreshSyncUI();
+      findDriveFile((fileId, err) => {
+        if (!fileId) {
+          if (err) { refreshSyncUI(); return; }
+          createDriveFile(currentPayload(), () => refreshSyncUI());
+          return;
+        }
+        downloadDriveFile(fileId, remote => {
+          if (!remote) { refreshSyncUI(); return; }
+          const remoteUpdatedAt = typeof remote.updatedAt === 'number' ? remote.updatedAt : 0;
+          if (remoteUpdatedAt >= lastUpdatedAt) {
+            tasks = Array.isArray(remote.tasks) ? remote.tasks : [];
+            lastUpdatedAt = remoteUpdatedAt;
+            localStorage.setItem(UPDATED_AT_KEY, String(lastUpdatedAt));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+            render();
+          }
+          refreshSyncUI();
+        });
+      });
+    });
+  }
+
+  function openSyncModal() {
+    document.getElementById('connectDriveBtn').style.display = driveState.signedIn ? 'none' : 'inline-block';
+    document.getElementById('disconnectDriveBtn').style.display = driveState.signedIn ? 'inline-block' : 'none';
+    let bodyText = driveState.signedIn
+      ? 'Connected. Your data syncs automatically to a hidden folder in your Google Drive.'
+      : 'Connect Google Drive so this list stays the same on your phone and your laptop. Your data is stored in a hidden app folder in your Drive.';
+    if (driveState.lastError) {
+      const msg = driveState.lastError.message || (driveState.lastError.error && driveState.lastError.error.message) || JSON.stringify(driveState.lastError);
+      bodyText += '\n\nLast sync error: ' + msg;
+    }
+    const bodyEl = document.getElementById('syncModalBody');
+    bodyEl.textContent = bodyText;
+    bodyEl.style.whiteSpace = 'pre-wrap';
+    document.getElementById('syncModalOverlay').classList.add('active');
+  }
+
+  function closeSyncModal() {
+    document.getElementById('syncModalOverlay').classList.remove('active');
+  }
+
+  document.getElementById('syncStatus').addEventListener('click', openSyncModal);
+  document.getElementById('syncModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'syncModalOverlay') closeSyncModal();
+  });
+
+  document.getElementById('overlay').addEventListener('click', (e) => {
+    if (e.target.id === 'overlay') closeModal();
+  });
+
+  document.getElementById('qa-task').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') quickAdd();
+  });
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('./sw.js').catch(function () {});
+    });
+  }
+
+  loadTasks();
+  refreshSyncUI();
+
+  window.addEventListener('load', function () {
+    let tries = 0;
+    (function waitForGis() {
+      tries++;
+      if (typeof google !== 'undefined' && google.accounts) {
+        initGoogleAuth();
+      } else if (tries < 40) {
+        setTimeout(waitForGis, 125);
+      } else {
+        refreshSyncUI();
+      }
+    })();
+  });
+</script>
+</body>
+</html>
