@@ -1130,6 +1130,37 @@
     bodyEl.textContent = bodyText;
     bodyEl.style.whiteSpace = 'pre-wrap';
     document.getElementById('syncModalOverlay').classList.add('active');
+
+    if (driveState.signedIn) runDriveDebug();
+  }
+
+  function runDriveDebug() {
+    const bodyEl = document.getElementById('syncModalBody');
+    ensureValidToken(ok => {
+      if (!ok) return;
+      const params = new URLSearchParams({
+        spaces: 'appDataFolder',
+        fields: 'files(id,name,modifiedTime,size)',
+        pageSize: '50'
+      });
+      driveFetch('https://www.googleapis.com/drive/v3/files?' + params.toString())
+        .then(r => r.json())
+        .then(data => {
+          const files = data.files || [];
+          let debugText = '\n\n— Debug: appDataFolder contents —\n';
+          if (!files.length) {
+            debugText += '(empty — no files at all in appDataFolder for this account)';
+          } else {
+            files.forEach(f => {
+              debugText += `${f.name} — ${f.size || '?'} bytes — modified ${f.modifiedTime}\n`;
+            });
+          }
+          bodyEl.textContent += debugText;
+        })
+        .catch(err => {
+          bodyEl.textContent += '\n\n— Debug lookup failed: ' + (err.message || err) + ' —';
+        });
+    });
   }
 
   function closeSyncModal() {
