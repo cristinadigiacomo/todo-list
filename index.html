@@ -590,6 +590,11 @@
     </div>
 
     <div class="field">
+      <label>Due date</label>
+      <input type="date" id="edit-date">
+    </div>
+
+    <div class="field">
       <label>Status</label>
       <div class="outcome-row" id="status-buttons"></div>
     </div>
@@ -829,6 +834,7 @@
     document.getElementById('modal-sub').textContent = 'Added ' + (t.date || '—');
     document.getElementById('edit-task').value = t.task || '';
     document.getElementById('edit-notes').value = t.notes || '';
+    document.getElementById('edit-date').value = t.date || '';
 
     document.getElementById('status-buttons').innerHTML = statuses.map(s => `
       <button type="button" class="outcome-btn ${s} ${t.status === s ? 'active ' + s : ''}" data-status="${s}" onclick="pickStatus('${s}')">${statusLabels[s]}</button>
@@ -856,6 +862,7 @@
     if (!taskText) { document.getElementById('edit-task').focus(); return; }
     t.task = taskText;
     t.notes = document.getElementById('edit-notes').value.trim();
+    t.date = document.getElementById('edit-date').value || t.date;
     persist();
     render();
     closeModal();
